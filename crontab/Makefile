@@ -12,8 +12,8 @@ COPTS = -O2 -Wall -g
 #INCDIRS = 
 CFLAGS = $(COPTS) $(INCDIRS)
 
-#LIBS = 
-#LDFLAGS = 
+LIBS = -lpthread
+LDFLAGS = $(LIBS)
 
 all: $(TARGETS)
 
