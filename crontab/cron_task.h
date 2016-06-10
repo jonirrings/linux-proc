@@ -22,7 +22,8 @@ typedef struct task {
 extern int task_add(void (*t)(void), unsigned int interval);
 extern void task_clear();
 
-extern void task_cron();
+extern void cron_start();
+extern void cron_stop();
 
 #ifdef __cplusplus
 }

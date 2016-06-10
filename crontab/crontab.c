@@ -11,20 +11,43 @@
 static struct {
 	// task chain
 	task_t *head;
-	task_t *rear;
 
 	// lock
 	pthread_mutex_t mutex;
 } task_tab = {
-	NULL, NULL, PTHREAD_MUTEX_INITIALIZER
+	NULL, PTHREAD_MUTEX_INITIALIZER
+};
+
+static struct {
+	int n_thread;
+
+	pthread_mutex_t mutex;
+	pthread_cond_t  cond;
+} th_task = {
+	0, PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER
+};
+
+// only one cron thread can run at a time
+static struct {
+	pthread_t tid;
+
+	// thread status, is running
+	int s_run;
+	// command word, stop command
+	int cw_stop;
+} th_cron = {
+	0, 0, 1
 };
 
 int task_add(void (*t)(void), unsigned int interval) {
+	task_t *task;
+	task_t **p;
+
 	if (!t) {
 		return -1;
 	}
 
-	task_t *task = (task_t *)malloc(sizeof(task_t));
+	task = (task_t *)malloc(sizeof(task_t));
 	if (!task) {
 		return -1;
 	}
@@ -36,13 +59,11 @@ int task_add(void (*t)(void), unsigned int interval) {
 	// add task to task_table
 	pthread_mutex_lock(&task_tab.mutex);
 
-	if (!task_tab.rear) { // no task
-		task_tab.head = task;
-		task_tab.rear = task;
-	} else {
-		task_tab.rear->next = task;
-		task_tab.rear = task;
+	p = &task_tab.head;
+	while (*p) {
+		p = &(*p)->next;
 	}
+	*p = task;
 
 	pthread_mutex_unlock(&task_tab.mutex);
 
@@ -63,8 +84,6 @@ void task_clear() {
 		free(cur);
 	}
 
-	task_tab.rear = NULL;
-
 	pthread_mutex_unlock(&task_tab.mutex);
 }
 
@@ -79,6 +98,14 @@ static void *task_thread(void *pf) {
 
 	(*t)();
 
+	// thread comes to the end
+	pthread_mutex_lock(&th_task.mutex);
+	th_task.n_thread--;
+	if (!th_task.n_thread) { // no task threads
+		pthread_cond_signal(&th_task.cond);
+	}
+	pthread_mutex_unlock(&th_task.mutex);
+
 	return NULL;
 }
 
@@ -86,21 +113,24 @@ static void task_run(void (*t)(void)) {
 	pthread_t tid;
 
 	// create a new thread for this task
+	pthread_mutex_lock(&th_task.mutex);
 	pthread_create(&tid, NULL, task_thread, t);
 	pthread_detach(tid);
+	th_task.n_thread++;
+	pthread_mutex_unlock(&th_task.mutex);
 }
 
 static int task_check(const task_t *task, time_t tc) {
 	return (tc - task->fore_run >= task->interval);
 }
 
-void task_cron() {
+static void *task_cron_thread(void *arg) {
 	time_t tc;
 
 	task_t **p;
 	task_t *cur;
 
-	while (1) {
+	while (!th_cron.cw_stop) {
 		// current time
 		tc = time(NULL);
 
@@ -126,5 +156,37 @@ void task_cron() {
 
 		sleep(1);
 	}
+
+	return NULL;
+}
+
+void cron_start() {
+	// a cron thread already runs
+	if (th_cron.s_run) {
+		return ;
+	}
+	
+	th_cron.cw_stop = 0;
+	pthread_create(&th_cron.tid, NULL, task_cron_thread, NULL);
+	th_cron.s_run = 1;
+}
+
+void cron_stop() {
+	th_cron.cw_stop = 1;
+
+	// wait until cron thread over
+	pthread_join(th_cron.tid, NULL);
+
+	// wait until task threads over
+	pthread_mutex_lock(&th_task.mutex);
+	if (th_task.n_thread) {
+		pthread_cond_wait(&th_task.cond, &th_task.mutex);
+	}
+	pthread_mutex_unlock(&th_task.mutex);
+
+	// make sure all task threads dead
+	sleep(1);
+
+	th_cron.s_run = 0;
 }
 

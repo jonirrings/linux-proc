@@ -4,9 +4,9 @@ TARGETS = crontab
 
 HEADERS = cron_task.h
 
-CRONSRCS = main.c crontab.c tasks/task_alarm.c
+CRONSRCS = main.c crontab.c tasks/task_alarm.c tasks/task_fib.c
 
-CRONOBJS = main.o crontab.o tasks/task_alarm.o
+CRONOBJS = main.o crontab.o tasks/task_alarm.o tasks/task_fib.o
 
 COPTS = -O2 -Wall -g
 #INCDIRS = 
