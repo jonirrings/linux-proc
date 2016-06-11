@@ -1,4 +1,4 @@
 # crontab options
 
 plugin ../plugins/alien_ton.so 2
-plugin ../plugins/story_apple/story_apple.so
+plugin ../plugins/story_apple.so

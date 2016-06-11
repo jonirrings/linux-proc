@@ -16,7 +16,7 @@ static void init_module() {
 	plug_t *plug;
 
 	// load options
-	opt = opt_load("cron_conf");
+	opt = opt_load("../etc/options");
 
 	// init plugins
 	tpg = opt->plug_list;

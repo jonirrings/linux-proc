@@ -1,5 +1,12 @@
 # crontab Makefile
 
+DSTDIR = ../test
+BINDIR = $(DSTDIR)/bin
+PLGDIR = $(DSTDIR)/plugins
+ETCDIR = $(DSTDIR)/etc
+
+INSTALL = install
+
 TARGETS = crontab
 
 HEADERS = crontab.h plug.h option.h util.h
@@ -21,6 +28,14 @@ all: $(TARGETS)
 
 crontab: $(CRONOBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o crontab $(CRONOBJS) $(LIBS)
+
+install: $(BINDIR) $(BINDIR)/crontab
+
+$(BINDIR)/crontab:
+	$(INSTALL) -c -m 555 crontab $@
+
+$(BINDIR):
+	$(INSTALL) -d -m 755 $@
 
 clean: 
 	rm -f $(CRONOBJS) $(TARGETS)
