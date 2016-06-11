@@ -1,48 +1,62 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "crontab.h"
 #include "plug.h"
+#include "option.h"
 
 extern void t_alarm();
 extern void t_cfib();
 
-int main(int argc, char *argv[]) {
-	int n_task = 0;
-	plug_t *plug = NULL;
+static void init_module() {
+	opt_t *opt;
+	opt_plug_t *tpg;
 
-	printf("Add alarm task (%d).\n", ++n_task);
-	task_add(t_alarm, 0);
+	plug_t *plug;
 
-	plug = plug_load("../plugins/story_apple/story_apple.so");
-	if (plug) {
-		printf("Add story_apple task (%d).\n", ++n_task);
-		plug_task_add(plug, 0);
+	// load options
+	opt = opt_load("cron_conf");
+
+	// init plugins
+	tpg = opt->plug_list;
+	while (tpg) {
+		plug = plug_load(tpg->file);
+		if (plug) {
+			printf("Plugin %s loaded.\n", tpg->file);
+			plug_task_add(plug, tpg->interval);
+		}
+		tpg = tpg->next;
 	}
 
+	opt_clear(&opt);
+}
+
+static void clear_proc() {
+	task_clear();
+	plug_clear();
+}
+
+static int proc_stop = 0;
+static void sig_quit(int signo) {
+	proc_stop = 1;
+}
+
+int main(int argc, char *argv[]) {
+	signal(SIGINT, sig_quit);
+
+	init_module();
+
+	task_add(t_alarm, 1);
 	cron_start();
 
-	plug = plug_load("../plugins/alien_ton.so");
-	if (plug) {
-		printf("Add alien_ton task (%d).\n", ++n_task);
-		plug_task_add(plug, 4);
+	while (!proc_stop) {
+		sleep(1);
 	}
-
-	sleep(2);
-	printf("Add cfib task (%d).\n", ++n_task);
-	task_add(t_cfib, 1);
-
-	sleep(60);
-
-	printf("Add alarm task (%d).\n", ++n_task);
-	task_add(t_alarm, 0);
-	sleep(1);
 
 	cron_stop();
 
-	task_clear();
-
-	plug_clear();
+	clear_proc();
 
 	printf("Crontab is over.\n");
 
