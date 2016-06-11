@@ -11,24 +11,30 @@ int main(int argc, char *argv[]) {
 	int n_task = 0;
 	plug_t *plug = NULL;
 
-	printf("Add alarm task (%d).\n", n_task++);
+	printf("Add alarm task (%d).\n", ++n_task);
 	task_add(t_alarm, 0);
+
+	plug = plug_load("../plugins/story_apple/story_apple.so");
+	if (plug) {
+		printf("Add story_apple task (%d).\n", ++n_task);
+		plug_task_add(plug, 0);
+	}
 
 	cron_start();
 
 	plug = plug_load("../plugins/alien_ton.so");
 	if (plug) {
-		printf("Add alien_ton task (%d).\n", n_task++);
+		printf("Add alien_ton task (%d).\n", ++n_task);
 		plug_task_add(plug, 4);
 	}
 
 	sleep(2);
-	printf("Add cfib task (%d).\n", n_task++);
+	printf("Add cfib task (%d).\n", ++n_task);
 	task_add(t_cfib, 1);
 
-	sleep(20);
+	sleep(60);
 
-	printf("Add alarm task (%d).\n", n_task++);
+	printf("Add alarm task (%d).\n", ++n_task);
 	task_add(t_alarm, 0);
 	sleep(1);
 

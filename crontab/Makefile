@@ -27,4 +27,3 @@ clean:
 
 depend:
 	$(CPP) -M $(CFLAGS) $(CRONSRCS) >.depend
-
