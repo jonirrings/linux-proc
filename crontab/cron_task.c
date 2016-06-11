@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "cron_task.h"
+#include "crontab.h"
 
 static struct {
 	// task chain
@@ -93,8 +93,8 @@ static void *task_thread(void *pf) {
 	// Remark: tasks may run on threads with a same id 
 	// as the previous thread is over and its id can 
 	// be used again.
-	printf("Task 0x%lX runs on Thread 0x%lX\n", 
-			(unsigned long)t, (unsigned long)pthread_self());
+	// printf("Task 0x%lX runs on Thread 0x%lX\n", 
+	// 		(unsigned long)t, (unsigned long)pthread_self());
 
 	(*t)();
 

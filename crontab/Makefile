@@ -2,18 +2,20 @@
 
 TARGETS = crontab
 
-HEADERS = cron_task.h
+HEADERS = crontab.h plug.h
 
-CRONSRCS = main.c crontab.c tasks/task_alarm.c tasks/task_fib.c
+CRONSRCS = main.c cron_task.c plug_task.c \
+		tasks/task_alarm.c tasks/task_fib.c
 
-CRONOBJS = main.o crontab.o tasks/task_alarm.o tasks/task_fib.o
+CRONOBJS = main.o cron_task.o plug_task.o \
+		tasks/task_alarm.o tasks/task_fib.o
 
 COPTS = -O2 -Wall -g
 #INCDIRS = 
 CFLAGS = $(COPTS) $(INCDIRS)
 
-LIBS = -lpthread
-LDFLAGS = $(LIBS)
+LIBS = -lpthread -ldl
+#LDFLAGS = 
 
 all: $(TARGETS)
 

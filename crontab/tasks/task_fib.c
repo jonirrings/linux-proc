@@ -7,6 +7,6 @@ void t_cfib() {
 	int f = a + b;
 	a = b, b = f;
 
-	printf("%d\n", f);
+	printf("Fib: %d + %d = %d\n", a, b, f);
 }
 
